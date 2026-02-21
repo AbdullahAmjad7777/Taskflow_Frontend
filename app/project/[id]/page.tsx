@@ -21,17 +21,14 @@ export default function ProjectPage() {
     due_date: '',
   });
 
-  // API Call to fetch details
   const fetchProjectDetails = useCallback(async () => {
     if (!user?.token || !id) return;
     try {
-      // 1. Get Tasks for this project
       const res = await api.get(`/tasks/${id}`, { 
         headers: { Authorization: `Bearer ${user.token}` } 
       });
       setTasks(res.data);
       
-      // 2. Get All Projects to find current project name
       const projRes = await api.get(`/projects`, { 
         headers: { Authorization: `Bearer ${user.token}` } 
       });
@@ -46,7 +43,6 @@ export default function ProjectPage() {
     if (user?.token) fetchProjectDetails();
   }, [user, fetchProjectDetails]);
 
-  // Add New Task
   const handleAddTask = async () => {
     if (!newTask.title) return alert("Title is required");
     if (!user?.token) return;
@@ -62,7 +58,6 @@ export default function ProjectPage() {
     }
   };
 
-  // Update Existing Task (from Modal)
   const handleUpdateTask = async () => {
     if (!editTask || !user?.token) return;
     try {
@@ -76,7 +71,6 @@ export default function ProjectPage() {
     }
   };
 
-  // Delete Task
   const handleDeleteTask = async (taskId: number) => {
     if (!confirm("Delete this task?") || !user?.token) return;
     try {
@@ -89,7 +83,6 @@ export default function ProjectPage() {
     }
   };
 
-  // Delete Entire Project
   const handleDeleteProject = async () => {
     if (!confirm("Are you sure? This will delete the project and all its tasks.") || !user?.token) return;
     try {
@@ -98,76 +91,115 @@ export default function ProjectPage() {
       });
       router.push('/dashboard');
     } catch (err) {
-      alert("Delete failed. Check backend route.");
+      alert("Delete failed.");
     }
   };
 
-  // Move Task (Important for "Done" status)
   const moveTask = async (task: any, newStatus: string) => {
-  if (!user?.token) return;
-
-  // Date ko clean karein: "2026-02-22T19:00:00.000Z" -> "2026-02-22"
-  const cleanDate = task.due_date ? task.due_date.split('T')[0] : null;
-
-  try {
-    await api.put(`/tasks/${task.id}`, 
-      { ...task, status: newStatus, due_date: cleanDate }, 
-      { headers: { Authorization: `Bearer ${user.token}` } }
-    );
-    fetchProjectDetails();
-  } catch (error) {
-    console.error("Move Task Error:", error);
-  }
-};
+    if (!user?.token) return;
+    const cleanDate = task.due_date ? task.due_date.split('T')[0] : null;
+    try {
+      await api.put(`/tasks/${task.id}`, 
+        { ...task, status: newStatus, due_date: cleanDate }, 
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      fetchProjectDetails();
+    } catch (error) {
+      console.error("Move Task Error:", error);
+    }
+  };
 
   const statuses = ['To Do', 'In Progress', 'Done'];
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-[#F8FAFC] min-h-screen transition-colors duration-500">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <button onClick={() => router.push('/dashboard')} className="text-blue-600 hover:underline mb-2 block">← Back to Dashboard</button>
-            <h1 className="text-3xl font-bold text-gray-800">{project?.name || 'Project Tasks'}</h1>
+        
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <div className="group">
+            <button 
+              onClick={() => router.push('/dashboard')} 
+              className="flex items-center text-blue-600 font-semibold mb-2 transition-transform hover:-translate-x-1"
+            >
+              <span className="mr-2">←</span> Back to Dashboard
+            </button>
+            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+              {project?.name || 'Project Tasks'}
+            </h1>
           </div>
-          <button onClick={handleDeleteProject} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200 transition">
+          <button 
+            onClick={handleDeleteProject} 
+            className="bg-red-50 text-red-600 px-5 py-2.5 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm border border-red-100 active:scale-95"
+          >
             Delete Project
           </button>
-        </div>
+        </header>
 
-        {/* Add Task Form */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-gray-200">
-          <h2 className="text-lg font-bold mb-4">Add New Task</h2>
+        {/* Add Task Form - Modern Glassmorphism approach */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm mb-10 border border-slate-200/60 transition-all hover:shadow-md">
+          <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Quick Add Task</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input className="border p-2 rounded-lg" placeholder="Task Title" value={newTask.title} onChange={e => setNewTask({...newTask, title: e.target.value})} />
-            <input type="date" className="border p-2 rounded-lg" value={newTask.due_date} onChange={e => setNewTask({...newTask, due_date: e.target.value})} />
-            <select className="border p-2 rounded-lg" value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})}>
+            <input 
+              className="border border-slate-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+              placeholder="Task Title" 
+              value={newTask.title} 
+              onChange={e => setNewTask({...newTask, title: e.target.value})} 
+            />
+            <input 
+              type="date" 
+              className="border border-slate-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+              value={newTask.due_date} 
+              onChange={e => setNewTask({...newTask, due_date: e.target.value})} 
+            />
+            <select 
+              className="border border-slate-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white" 
+              value={newTask.priority} 
+              onChange={e => setNewTask({...newTask, priority: e.target.value})}
+            >
               <option>Low</option><option>Medium</option><option>High</option>
             </select>
-            <button onClick={handleAddTask} className="bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Add Task</button>
-            <textarea className="border p-2 rounded-lg md:col-span-4" placeholder="Description" value={newTask.description} onChange={e => setNewTask({...newTask, description: e.target.value})} />
+            <button 
+              onClick={handleAddTask} 
+              className="bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
+            >
+              Create Task
+            </button>
+            <textarea 
+              className="border border-slate-200 p-3 rounded-xl md:col-span-4 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[80px]" 
+              placeholder="Describe the task details..." 
+              value={newTask.description} 
+              onChange={e => setNewTask({...newTask, description: e.target.value})} 
+            />
           </div>
-        </div>
+        </section>
 
-        {/* Task Board */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Task Board - Kanban Style */}
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {statuses.map(status => (
-            <div key={status} className="bg-gray-100 p-4 rounded-xl min-h-[400px]">
-              <h3 className="font-black text-gray-500 uppercase text-sm mb-4 tracking-widest">{status}</h3>
-              <div className="space-y-3">
+            <div key={status} className="bg-slate-200/40 p-5 rounded-2xl border border-slate-200/50 min-h-[500px] transition-all">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-black text-slate-500 uppercase text-xs tracking-[0.2em]">{status}</h3>
+                <span className="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {tasks.filter(t => t.status === status).length}
+                </span>
+              </div>
+              
+              <div className="space-y-4">
                 {tasks.filter(t => t.status === status).map(task => (
-                  <div key={task.id} className="relative group">
+                  <div key={task.id} className="group relative animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <TaskCard task={task} onEdit={setEditTask} onDelete={handleDeleteTask} />
-                    {/* Move Quick Actions */}
-                    <div className="flex gap-1 mt-1">
+                    
+                    {/* Simplified Quick Move Actions */}
+                    <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 overflow-x-auto pb-1">
                       {statuses.filter(s => s !== status).map(s => (
                         <button 
                           key={s} 
                           onClick={() => moveTask(task, s)} 
-                          className="text-[10px] bg-white border px-2 py-0.5 rounded hover:bg-blue-50 transition"
+                          className="whitespace-nowrap text-[9px] font-black uppercase tracking-tighter bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
                         >
-                          Move to {s}
+                          → {s}
                         </button>
                       ))}
                     </div>
@@ -179,22 +211,36 @@ export default function ProjectPage() {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Modern Edit Modal */}
       {editTask && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-bold mb-4">Edit Task</h2>
-            <input className="border w-full p-2 mb-2 rounded" value={editTask.title} onChange={e => setEditTask({...editTask, title: e.target.value})} />
-            <textarea className="border w-full p-2 mb-2 rounded" value={editTask.description} onChange={e => setEditTask({...editTask, description: e.target.value})} />
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <select className="border p-2 rounded" value={editTask.priority} onChange={e => setEditTask({...editTask, priority: e.target.value})}>
-                <option>Low</option><option>Medium</option><option>High</option>
-              </select>
-              <input type="date" className="border p-2 rounded" value={editTask.due_date?.split('T')[0] || ''} onChange={e => setEditTask({...editTask, due_date: e.target.value})} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 transform animate-in zoom-in-95 duration-300">
+            <h2 className="text-2xl font-black text-slate-800 mb-6">Edit Task</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Title</label>
+                <input className="border border-slate-200 w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" value={editTask.title} onChange={e => setEditTask({...editTask, title: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Description</label>
+                <textarea className="border border-slate-200 w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 min-h-[100px]" value={editTask.description} onChange={e => setEditTask({...editTask, description: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Priority</label>
+                  <select className="border border-slate-200 w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" value={editTask.priority} onChange={e => setEditTask({...editTask, priority: e.target.value})}>
+                    <option>Low</option><option>Medium</option><option>High</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Due Date</label>
+                  <input type="date" className="border border-slate-200 w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" value={editTask.due_date?.split('T')[0] || ''} onChange={e => setEditTask({...editTask, due_date: e.target.value})} />
+                </div>
+              </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setEditTask(null)} className="px-4 py-2 text-gray-500 hover:text-gray-700">Cancel</button>
-              <button onClick={handleUpdateTask} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
+            <div className="flex justify-end gap-3 mt-8">
+              <button onClick={() => setEditTask(null)} className="px-6 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">Cancel</button>
+              <button onClick={handleUpdateTask} className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 active:scale-95 transition-all">Save Changes</button>
             </div>
           </div>
         </div>
