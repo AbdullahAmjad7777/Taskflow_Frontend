@@ -49,64 +49,101 @@ export default function Dashboard() {
     fetchData();
   };
 
-  if (authLoading || loading) return <div className="p-10 text-center">Loading TaskFlow...</div>;
+  if (authLoading || loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen space-y-4 bg-gray-50">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-blue-600 font-bold animate-pulse">Loading TaskFlow...</p>
+      </div>
+    );
+  }
 
-  // Stats Logic
   const totalProjects = projects.length;
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === 'Done').length;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto min-h-screen bg-gray-50">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-black text-blue-600 tracking-tight">TaskFlow</h1>
-        <button onClick={logout} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-200">Logout</button>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen bg-gray-50 transition-all duration-700 ease-in-out">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
+        <div>
+          <h1 className="text-4xl font-black text-blue-600 tracking-tighter transition-all hover:skew-x-2 cursor-default">TaskFlow</h1>
+          <p className="text-gray-400 text-sm font-medium">Welcome back, {user?.name || 'User'} 👋</p>
+        </div>
+        <button 
+          onClick={logout} 
+          className="w-full sm:w-auto bg-red-50 text-red-600 px-6 py-2 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-90 border border-red-100"
+        >
+          Logout
+        </button>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        <div className="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500">
-          <p className="text-gray-500 text-sm font-bold uppercase">Total Projects</p>
-          <p className="text-3xl font-black">{totalProjects}</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border-b-4 border-purple-500">
-          <p className="text-gray-500 text-sm font-bold uppercase">Total Tasks</p>
-          <p className="text-3xl font-black">{totalTasks}</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border-b-4 border-green-500">
-          <p className="text-gray-500 text-sm font-bold uppercase">Completed</p>
-          <p className="text-3xl font-black">{completedTasks}</p>
-        </div>
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {[
+          { label: 'Total Projects', val: totalProjects, color: 'border-blue-500', text: 'text-blue-600' },
+          { label: 'Total Tasks', val: totalTasks, color: 'border-purple-500', text: 'text-purple-600' },
+          { label: 'Completed', val: completedTasks, color: 'border-green-500', text: 'text-green-600' }
+        ].map((stat, i) => (
+          <div key={i} className={`bg-white p-6 rounded-2xl shadow-sm border-b-8 ${stat.color} transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl`}>
+            <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">{stat.label}</p>
+            <p className={`text-4xl font-black ${stat.text}`}>{stat.val}</p>
+          </div>
+        ))}
       </div>
 
       {/* Create Project Section */}
-      <div className="flex gap-2 mb-10 bg-white p-4 rounded-xl shadow-sm">
+      <div className="group flex flex-col sm:flex-row gap-3 mb-12 bg-white p-3 rounded-2xl shadow-md border border-gray-100 transition-all focus-within:ring-2 focus-within:ring-blue-100">
         <input 
-          className="flex-1 border p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" 
-          placeholder="Enter project name..." 
+          className="flex-1 bg-transparent p-3 outline-none font-medium text-gray-700" 
+          placeholder="What's your next big project?" 
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
         />
-        <button onClick={handleCreateProject} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">Create Project</button>
+        <button 
+          onClick={handleCreateProject} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-blue-200"
+        >
+          Add Project
+        </button>
       </div>
 
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => {
+      <h2 className="text-xl font-black text-gray-800 mb-6 px-1">Your Workspaces</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {projects.map((project, index) => {
           const projectTasks = tasks.filter(t => t.project_id === project.id);
           const done = projectTasks.filter(t => t.status === 'Done').length;
           const total = projectTasks.length;
           const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
           return (
-            <div key={project.id} onClick={() => router.push(`/project/${project.id}`)} className="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-md cursor-pointer transition">
-              <h3 className="text-xl font-bold mb-4">{project.name}</h3>
-              <div className="flex justify-between text-sm mb-2 font-medium">
-                <span className="text-gray-500">{done} of {total} tasks</span>
-                <span className="text-blue-600">{progress}%</span>
+            <div 
+              key={project.id} 
+              onClick={() => router.push(`/project/${project.id}`)} 
+              className="group bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-100 cursor-pointer transition-all duration-500 flex flex-col"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase tracking-tight">
+                  {project.name}
+                </h3>
+                <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-md">PROJ-{project.id.toString().slice(-3)}</span>
               </div>
-              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-blue-500 h-full transition-all" style={{ width: `${progress}%` }} />
+              
+              <div className="mt-auto">
+                <div className="flex justify-between text-xs mb-3 font-bold">
+                  <span className="text-gray-400">{done} / {total} Tasks Finished</span>
+                  <span className="text-blue-600">{progress}%</span>
+                </div>
+                
+                <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden border border-gray-50">
+                  <div 
+                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000 rounded-full" 
+                    style={{ width: `${progress}%` }} 
+                  />
+                </div>
               </div>
             </div>
           );
